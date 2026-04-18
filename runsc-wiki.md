@@ -10,7 +10,7 @@
 
 ## Table of Contents
 
-1. [Initial Task: Connect to AuditScraper](#1-initial-task-connect-to-auditscraper)
+1. [Initial Task: External Service Integration Attempt](#1-initial-task-external-service-integration-attempt)
 2. [Environment Discovery](#2-environment-discovery)
 3. [System Specs](#3-system-specs)
 4. [Network Investigation](#4-network-investigation)
@@ -24,18 +24,18 @@
 
 ---
 
-## 1. Initial Task: Connect to AuditScraper
+## 1. Initial Task: External Service Integration Attempt
 
-**User:** "can you connect to auditscraper?"
+**User:** "can you connect to [REDACTED-PROJECT]?"
 
 **Codebase Exploration Results:**
 - Project: SecureMind Tech Solutions website (`www.securemind.co.nz`)
 - Type: Static HTML site on GitHub Pages
 - Files: `index.html`, `docs/index.html`, `CNAME`, image assets, Jekyll workflow
-- **Zero references** to AuditScraper, scrapers, APIs, or backend integrations
+- **Zero references** to the requested service, APIs, or backend integrations
 - No `.env`, config files, package.json — purely static
 
-**Conclusion:** No AuditScraper to connect to. Asked user for clarification on what AuditScraper is and what kind of connection they wanted.
+**Conclusion:** No matching integration to connect to. Asked user for clarification on the target service and connection type.
 
 ---
 
@@ -115,24 +115,17 @@ Linux runsc 4.4.0 #1 SMP Sun Jan 10 15:06:54 PST 2016 x86_64 x86_64 x86_64 GNU/L
 
 ```bash
 $ cat /proc/net/dev
-Inter-|   Receive                                                |  Transmit
- face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed
-bc85c1230b-v:  971916    2351    0    0    0     0          0         0  5107257    2379    0    0    0     0       0          0
-    lo:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+[REDACTED — raw network counters and interface names removed]
 
 $ cat /proc/net/tcp | head -5
-  sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt
-  16: 0100007F:9C4B 00000000:0000 0A 00000000:00000000 00:00000000 00000000
-  30: 32010415:618C 0A684FA0:01BB 01 00000000:00000000 00:00000000 00000000
-   3: 00000000:07E8 00000000:0000 0A 00000000:00000000 00:00000000 00000000
-  28: 32010415:85F1 0A684FA0:01BB 01 00000000:00000000 00:00000000 00000000
+[REDACTED — raw TCP socket table removed]
 ```
 
 **Decoded:**
-- Interface: `bc85c1230b-v` (virtual NIC) + `lo` (loopback)
-- Local IP: `21.4.1.50` (decoded from `32010415` little-endian hex)
-- Outbound: `160.79.104.10:443` (HTTPS — Anthropic API proxy)
-- Listening ports: `0x9C4B` = 39947 (local proxy), `0x07E8` = 2024
+- Interface: `[REDACTED-IFACE]` (virtual NIC) + `lo` (loopback)
+- Local IP: `[REDACTED-IP]` (sandbox-internal)
+- Outbound: `[REDACTED-IP]:443` (HTTPS — Anthropic API proxy)
+- Listening ports: local proxy + secondary
 - **Network is sandboxed** — outbound HTTPS only, no raw socket access
 
 ```bash
@@ -164,14 +157,14 @@ none             30G  7.1M   30G   1% /container_info.json
 
 ```json
 {
-  "container_name": "container_01G7nh7tdhdXMMHBrDVz5yKM--claude_code_remote--120d42",
-  "creation_time": 1776544117.3773775
+  "container_name": "[REDACTED-CONTAINER-ID]",
+  "creation_time": "[REDACTED-TIMESTAMP]"
 }
 ```
 
-- **Container name:** `container_01G7nh7tdhdXMMHBrDVz5yKM--claude_code_remote--120d42`
-- **Created:** April 18, 2026
-- The `claude_code_remote` confirms Anthropic's Claude Code remote execution environment
+- **Container name:** `[REDACTED-CONTAINER-ID]`
+- **Created:** April 2026
+- The container naming pattern confirms Anthropic's Claude Code remote execution environment
 
 ---
 
@@ -241,6 +234,15 @@ gcloud compute firewall-rules update allow-bookstack \
 ## 7. BookStack Files Created
 
 ### `/home/user/bookstack/docker-compose.yml`
+
+> **⚠ SECURITY:** The `bookstackpass` and `rootpass` values below are
+> **PLACEHOLDER DEFAULTS** for documentation purposes only.
+> **REPLACE BEFORE DEPLOY.** Generate strong values with:
+> ```bash
+> openssl rand -base64 32
+> ```
+> Move to `.env` (which is in `.gitignore`) and reference via
+> `${VAR}` interpolation in compose. Never commit real credentials.
 
 ```yaml
 version: "3.8"
@@ -333,8 +335,14 @@ echo "========================================="
 echo " BookStack is live at: $APP_URL"
 echo " Default login: admin@admin.com"
 echo " Default password: password"
+echo " ⚠ CHANGE IMMEDIATELY ON FIRST LOGIN — these defaults are public."
 echo "========================================="
 ```
+
+> **⚠ SECURITY:** `admin@admin.com` / `password` is BookStack's first-boot
+> default and is **publicly known**. Log in immediately after first deploy and
+> change both the email and password before exposing the instance to the
+> internet, even briefly.
 
 ### `/home/user/bookstack/gcloud-setup.sh`
 
@@ -483,10 +491,10 @@ mcp__github__create_repository(name="runsc-wiki", private=false, autoInit=true)
 ### Attempt 2: Push via git proxy
 
 ```bash
-$ git remote add origin http://local_proxy@127.0.0.1:39502/git/SecureMindkym/runsc-wiki
+$ git remote add origin http://local_proxy@127.0.0.1:[REDACTED-PORT]/git/SecureMindkym/runsc-wiki
 $ git push -u origin main
 remote: Proxy error: repository not authorized
-fatal: unable to access 'http://127.0.0.1:39502/git/SecureMindkym/runsc-wiki/':
+fatal: unable to access 'http://127.0.0.1:[REDACTED-PORT]/git/SecureMindkym/runsc-wiki/':
   The requested URL returned error: 502
 ```
 
@@ -511,12 +519,12 @@ mcp__github__push_files(owner="SecureMindkym", repo="runsc-wiki", ...)
 | Hostname | `runsc` |
 | Runtime | gVisor (runsc) sandbox |
 | Platform | Google Cloud (Anthropic Claude Code Remote) |
-| Container | `container_01G7nh7tdhdXMMHBrDVz5yKM--claude_code_remote--120d42` |
-| Created | 2026-04-18 |
+| Container | `[REDACTED-CONTAINER-ID]` |
+| Created | April 2026 |
 | CPU | 16 cores |
 | RAM | 21 GB |
 | Disk | 30 GB main, 315 GB tmpfs |
-| Local IP | 21.4.1.50 |
+| Local IP | `[REDACTED-IP]` |
 | Outbound | HTTPS to Anthropic API only |
 | Docker | CLI present, daemon blocked |
 | Public tunnels | Blocked (localtunnel, cloudflared) |
