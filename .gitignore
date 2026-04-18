@@ -67,6 +67,7 @@ claude-session-*.json
 bookstack_data/
 bookstack_db_data/
 my-cloud-wiki/tiddlers/
+my-cloud-wiki/output/
 *.sqlite
 *.db
 *.dump
