@@ -1,0 +1,95 @@
+# ============================================================
+# Secrets & credentials — never commit
+# ============================================================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+*.crt
+id_rsa
+id_ed25519
+*.kdbx
+secrets/
+credentials/
+config/local.*
+config/secrets.*
+
+# ============================================================
+# Cloud provider credential files
+# ============================================================
+.aws/
+.gcp/
+gcloud-key*.json
+service-account*.json
+*-key.json
+firebase-adminsdk*.json
+
+# ============================================================
+# Internal project leakage — Audity / AuditScraper
+# ============================================================
+audity/
+audit-engine/
+auditscraper/
+AuditDB/
+*.audity
+audity-*.md
+audit-engine-*.md
+scraping-strategy.md
+db-schema.sql
+
+# ============================================================
+# Infrastructure-mapping artifacts
+# ============================================================
+container_info.json
+runsc-debug.log
+proxmox-*.conf
+*.vmconfig
+infra-notes.md
+network-dump.*
+*.pcap
+
+# ============================================================
+# Session transcripts / Claude Code logs
+# ============================================================
+runsc-wiki.md
+CONVERSATION.md
+session-*.md
+claude-session-*.json
+.claude/
+.anthropic/
+
+# ============================================================
+# Operational data — never publish
+# ============================================================
+bookstack_data/
+bookstack_db_data/
+my-cloud-wiki/tiddlers/
+my-cloud-wiki/output/
+*.sqlite
+*.db
+*.dump
+*.sql.gz
+
+# ============================================================
+# OS / Editor cruft
+# ============================================================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# ============================================================
+# Build artefacts
+# ============================================================
+node_modules/
+dist/
+build/
+__pycache__/
+*.pyc
+.pytest_cache/
